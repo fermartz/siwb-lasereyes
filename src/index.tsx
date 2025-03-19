@@ -32,7 +32,6 @@ import {
   useEffect,
   useState,
   useRef,
-  useCallback,
 } from "react";
 import type { IDL } from "@dfinity/candid";
 import { AddressType, getAddressType, type NetworkItem } from "./wallet";
@@ -874,16 +873,6 @@ export function SiwbIdentityProvider<T extends verifierService>({
           } else {
             signMessageType = { ECDSA: null };
           }
-        } else if (state.selectedProvider === PHANTOM) {
-          const [addressType, _] = getAddressType(state.connectedBtcAddress);
-          if (
-            addressType === AddressType.P2TR ||
-            addressType === AddressType.P2WPKH
-          ) {
-            signMessageType = { Bip322Simple: null };
-          } else {
-            signMessageType = { ECDSA: null };
-          }
         } else if (state.selectedProvider === LEATHER) {
           const [addressType, _] = getAddressType(state.connectedBtcAddress);
           if (
@@ -905,6 +894,16 @@ export function SiwbIdentityProvider<T extends verifierService>({
             signMessageType = { ECDSA: null };
           }
         } else if (state.selectedProvider === ORANGE) {
+          const [addressType, _] = getAddressType(state.connectedBtcAddress);
+          if (
+            addressType === AddressType.P2TR ||
+            addressType === AddressType.P2WPKH
+          ) {
+            signMessageType = { Bip322Simple: null };
+          } else {
+            signMessageType = { ECDSA: null };
+          }
+        } else if (state.selectedProvider === PHANTOM) {
           const [addressType, _] = getAddressType(state.connectedBtcAddress);
           if (
             addressType === AddressType.P2TR ||
