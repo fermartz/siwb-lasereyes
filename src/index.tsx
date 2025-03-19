@@ -16,7 +16,8 @@ import {
   LaserEyesClient,
   LEATHER,
   MAGIC_EDEN,
-  OKX,
+  ORANGE,
+  PHANTOM,
   type ContentType,
 } from "@omnisat/lasereyes-core";
 import {
@@ -619,13 +620,20 @@ export function SiwbIdentityProvider<T extends verifierService>({
     const network = await provider.getNetwork();
     const address = await provider.requestAccounts();
     const publicKey = await provider.getPublicKey();
-    console.log("setLaserEyes");
-    console.log({ address, publicKey });
+
+    const getConnectedBtcAddress = (address: any) => {
+      if (p === "phantom") {
+        return address[0].address;
+      } else {
+        return address[0];
+      }
+    };
+
     updateState({
       selectedProvider: providerType ?? p,
       provider: provider,
       network,
-      connectedBtcAddress: address ? address[0] : "",
+      connectedBtcAddress: address ? getConnectedBtcAddress(address) : "",
       connectedBtcPublicKey: publicKey,
     });
   }
@@ -670,7 +678,6 @@ export function SiwbIdentityProvider<T extends verifierService>({
       });
       return siwbMessage;
     } catch (e) {
-      console.log("eee", e);
       const error = normalizeError(e);
       console.error(error);
       updateState({
@@ -854,11 +861,20 @@ export function SiwbIdentityProvider<T extends verifierService>({
           );
         }
       }
-
       if (state.provider !== undefined) {
         signMessageStatus = "pending";
         let signMessageType;
         if (state.selectedProvider === XVERSE) {
+          const [addressType, _] = getAddressType(state.connectedBtcAddress);
+          if (
+            addressType === AddressType.P2TR ||
+            addressType === AddressType.P2WPKH
+          ) {
+            signMessageType = { Bip322Simple: null };
+          } else {
+            signMessageType = { ECDSA: null };
+          }
+        } else if (state.selectedProvider === PHANTOM) {
           const [addressType, _] = getAddressType(state.connectedBtcAddress);
           if (
             addressType === AddressType.P2TR ||
@@ -879,7 +895,16 @@ export function SiwbIdentityProvider<T extends verifierService>({
             signMessageType = { ECDSA: null };
           }
         } else if (state.selectedProvider === MAGIC_EDEN) {
-          console.log("MAGIC_EDEN");
+          const [addressType, _] = getAddressType(state.connectedBtcAddress);
+          if (
+            addressType === AddressType.P2TR ||
+            addressType === AddressType.P2WPKH
+          ) {
+            signMessageType = { Bip322Simple: null };
+          } else {
+            signMessageType = { ECDSA: null };
+          }
+        } else if (state.selectedProvider === ORANGE) {
           const [addressType, _] = getAddressType(state.connectedBtcAddress);
           if (
             addressType === AddressType.P2TR ||
@@ -900,9 +925,6 @@ export function SiwbIdentityProvider<T extends verifierService>({
         updateState({
           signMessageType,
         });
-        console.log("signature", signature);
-        console.log("signMessageType", signMessageType);
-        console.log("signmessageStatus", signMessageStatus);
         signMessageStatus = "success";
         if (signature === undefined) {
           signMessageStatus = "error";
@@ -913,13 +935,6 @@ export function SiwbIdentityProvider<T extends verifierService>({
         const pubKey = await state.provider.getPublicKey();
         onLoginSignatureSettled(signature, pubKey!, signMessageType, null);
       }
-
-      // signMessage(
-      //   { message: siwbMessage },
-      //   {
-      //     onSettled: onLoginSignatureSettled,
-      //   },
-      // );
     } catch (e) {
       signMessageStatus = "error";
       signMessageError = e;
