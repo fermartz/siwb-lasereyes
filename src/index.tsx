@@ -145,7 +145,11 @@ export class SiwbConnector {
       delegationIdentityK ?? (sessionId as unknown as SignIdentity)
     );
 
-    const accounts = (await provider?.requestAccounts()) as string[];
+    const rawAccounts = (await provider?.requestAccounts()) as (string | { address: string })[];
+    // console.log('raw accounts',rawAccounts)
+    const accounts = rawAccounts.map((acc) =>
+      typeof acc === "string" ? acc : acc.address
+    );
     if (accounts === undefined || accounts.length === 0) {
       throw new Error("No accounts found");
     } else {
@@ -337,41 +341,6 @@ export async function handleDelegationVerification(
     throw new Error(result.Err as string);
   }
 }
-
-// export const useSiwbLaserEyes = (walletName: ProviderType) => {
-//   const { connect, connected, address, balance, signMessage, signPsbt, switchNetwork, requestAccounts, getPublicKey, getNetwork } = useLaserEyes();
-//   const [icIdentity, setIcIdentity] = useState<SignIdentity | undefined>(undefined);
-
-//   const icLogin = async () => {
-//     const client = {
-//       signMessage,
-//       requestAccounts,
-//       getPublicKey,
-//       getNetwork,
-//     } as LaserEyesClient;
-//     await SiwbConnector.connect(client);
-//     const delegation = await SiwbConnector.getDelegationIdentity();
-//     if (delegation) {
-//       setIcIdentity(delegation);
-//     }
-//   };
-
-//   return {
-//     icLogin,
-//     icIdentity,
-//     icPrincpal: icIdentity?.getPrincipal(),
-//     connect,
-//     connected,
-//     address,
-//     balance,
-//     signMessage,
-//     signPsbt,
-//     switchNetwork,
-//     requestAccounts,
-//     getPublicKey,
-//     getNetwork,
-//   };
-// };
 
 export type LaserEyesContextType = {
   isInitializing: boolean;
@@ -600,6 +569,7 @@ export function SiwbIdentityProvider<T extends verifierService>({
     }));
   }
 
+
   // Keep track of the promise handlers for the login method during the async login process.
   const loginPromiseHandlers = useRef<{
     resolve: (
@@ -609,23 +579,37 @@ export function SiwbIdentityProvider<T extends verifierService>({
   } | null>(null);
 
   // const { provider, address: connectedBtcAddress, network } = useRegisterExtension(state.selectedProvider);
-
+ 
   async function setLaserEyes(
     laserEyes: LaserEyesContextType,
     providerType?: ProviderType
   ) {
+    
     const [provider, p] = createClient(laserEyes);
-    await laserEyes.connect(providerType ?? p);
+    // console.log("setlasereyes", provider, p, "providerType", providerType)
+    try {
+      await laserEyes.connect(providerType ?? p);
+      // console.log("Connect resolved", c);
+    } catch (err) {
+      // console.error("Connect error:", err);
+      throw err;
+    }
     const network = await provider.getNetwork();
     const address = await provider.requestAccounts();
     const publicKey = await provider.getPublicKey();
 
-    const getConnectedBtcAddress = (address: any) => {
-      if (p === "phantom") {
-        return address[0].address;
-      } else {
-        return address[0];
-      }
+    // console.log("network", network)
+    // console.log("address", address)
+    // console.log("publicKey", publicKey)
+    const getConnectedBtcAddress = (accounts: any) => {
+      // Normalize each account so that we get a string address
+      const normalizedAccounts = Array.isArray(accounts)
+        ? accounts.map((acc: any) =>
+            typeof acc === "string" ? acc : acc.address
+          )
+        : [];
+      // console.log('normalized accounts', normalizedAccounts);
+      return normalizedAccounts[0] || "";
     };
 
     updateState({
@@ -1041,6 +1025,29 @@ export function SiwbIdentityProvider<T extends verifierService>({
     </SiwbIdentityContext.Provider>
   );
 }
-function normalizeError(e: unknown) {
-  throw new Error('Function not implemented.');
+
+function normalizeError(e: unknown): Error {
+  // console.log('the error', e)
+  if (e instanceof Error) {
+    return e;
+  }
+  if (typeof e === "string") {
+    return new Error(e);
+  }
+  if (e && typeof e === "object") {
+    // Try to use the message property if it exists
+    if ("message" in e && typeof (e as any).message === "string") {
+      return new Error((e as any).message);
+    }
+    try {
+      return new Error(JSON.stringify(e));
+    } catch {
+      return new Error(String(e));
+    }
+  }
+  return new Error("Unknown error");
 }
+// function normalizeError(e: unknown) {
+//   console.log('the error', e)
+//   // throw new Error('Function not implemented.');
+// }
