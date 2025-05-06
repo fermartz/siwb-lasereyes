@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "@dfinity/principal": "^2.1.3",
-    "@omnisat/lasereyes": "^0.0.143",
-    "@omnisat/lasereyes-core": "^0.0.65"
+    "@omnisat/lasereyes": "^0.0.148",
+    "@omnisat/lasereyes-core": "^0.0.70"
   }
 }

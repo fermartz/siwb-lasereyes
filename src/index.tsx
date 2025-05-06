@@ -579,13 +579,25 @@ export function SiwbIdentityProvider<T extends verifierService>({
   } | null>(null);
 
   // const { provider, address: connectedBtcAddress, network } = useRegisterExtension(state.selectedProvider);
- 
+
+  function isMobile() {
+    const userAgent =
+      typeof window !== "undefined" ? window.navigator.userAgent : "";
+    return /Android|iPhone|iPad|iPod/i.test(userAgent);
+  }
+
   async function setLaserEyes(
     laserEyes: LaserEyesContextType,
     providerType?: ProviderType
   ) {
-    
     const [provider, p] = createClient(laserEyes);
+    if (isMobile() && (providerType ?? p) === XVERSE) {
+      const currentUrl = window.location.href;
+      const encodedUrl = encodeURIComponent(currentUrl);
+      const redirectUri = `https://connect.xverse.app/browser?url=${encodedUrl}`;
+      window.location.href = redirectUri;
+      return;
+    }
     // console.log("setlasereyes", provider, p, "providerType", providerType)
     try {
       await laserEyes.connect(providerType ?? p);
