@@ -26,9 +26,9 @@
     "dev:esbuild": "npm run build --watch"
   },
   "peerDependencies": {
-    "@dfinity/agent": ">=2.1.3",
-    "@dfinity/candid": ">=2.1.3",
-    "@dfinity/identity": ">=2.1.3",
+    "@dfinity/agent": "2.4.1",
+    "@dfinity/candid": "2.4.1",
+    "@dfinity/identity": "2.4.1",
     "react": ">=18.0.0"
   },
   "devDependencies": {
@@ -46,8 +46,8 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@dfinity/principal": "^2.1.3",
-    "@omnisat/lasereyes": "^0.0.143",
-    "@omnisat/lasereyes-core": "^0.0.65"
+    "@dfinity/principal": "^2.4.1",
+    "@omnisat/lasereyes": "^0.0.158",
+    "@omnisat/lasereyes-core": "^0.0.80"
   }
 }
