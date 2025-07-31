@@ -1,6 +1,6 @@
 {
   "name": "siwb-lasereyes",
-  "version": "1.0.7",
+  "version": "1.0.9",
   "description": "React hook and context provider for easy frontend integration with SIWB enabled Internet Computer canisters.",
   "author": "fermartz",
   "keywords": [
